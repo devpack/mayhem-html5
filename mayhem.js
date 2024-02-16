@@ -97,6 +97,16 @@ var PLATFORMS_5 = [ [ 504, 568, 985 ],
                     [ 499, 586, 1165 ],
                     [ 68, 145, 1181 ] ];
 
+var PLATFORMS_6 = [ 
+    [464, 513, 333],  [60, 127, 1045], [428, 497, 531], [504, 568, 985],
+    [178, 241, 875],  [8, 37, 187],    [302, 351, 271], [434, 521, 835],
+    [499, 586, 1165], [68, 145, 1181],
+
+    [993, 1051, 175], [813, 884, 1087], [1344, 1407, 513], [1260, 1317, 915], [1338, 1391, 327], [1452, 1489, 447], [1142, 1227, 621], [1388, 1489, 1141],
+    [806, 857, 1311], [830, 885, 2321], [1505, 1552, 1431], [1265, 1332, 1817], [1357, 1408, 1659], [1135, 1190, 1407], [1108, 1177, 2005], [1284, 1340, 2187], [858, 937, 2380],
+    [19, 69, 1311], [32, 84, 2321], [705, 755, 1431], [487, 547, 1817], [556, 607, 1659], [344, 393, 1407], [326, 377, 2005], [502, 554, 2187], [66, 145, 2380]
+];
+
 // TODO made that editable dynamically
 // Keyboard / Gamepad controls (https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API)
 const K1_RIGHT  = "KeyX";
@@ -187,7 +197,7 @@ class Ship {
 
         this.ship_number = ship_number;
         this.ship_name = ship_name;
-        this.ship_ctx = this.game.ships_ctx[this.ship_name].getContext('2d');
+        this.ship_ctx = this.game.ships_ctx[this.ship_name].getContext('2d', { willReadFrequently: true });
         this.ship_current_pic = this.ship_name;
         this.platforms = platforms;
 
@@ -291,7 +301,7 @@ class Ship {
             // draw and move debris
             else {
 
-                // drax explosion
+                // draw explosion
                 let ship_cx = this.xpos + SHIP_SPRITE_SIZE/2;
                 let ship_cy = this.ypos + SHIP_SPRITE_SIZE/2;
 
@@ -789,6 +799,18 @@ class MayhemEnv {
     set_level(level) {
         CURRENT_LEVEL = level;
 
+        if(CURRENT_LEVEL==6) {
+            //this.game.map_buffer = document.createElement('canvas');
+            this.game.map_buffer.width  = MAP_WIDTH*2;
+            this.game.map_buffer.height = MAP_HEIGHT*2;
+            //this.game.map_buffer_ctx = this.game.map_buffer.getContext('2d', { willReadFrequently: true });
+            //this.game.map_buffer_ctx.imageSmoothingEnabled = false;
+        }
+        else {
+            this.game.map_buffer.width  = MAP_WIDTH;
+            this.game.map_buffer.height = MAP_HEIGHT;
+        }
+        
         if(level==1) {
             var platforms = PLATFORMS_1;      
         }
@@ -803,6 +825,9 @@ class MayhemEnv {
         }
         else if(level==5) {
             var platforms = PLATFORMS_5;            
+        }
+        else if(level==6) {
+            var platforms = PLATFORMS_6;            
         }
 
         var SHIP1_X = (platforms[0][0] + platforms[0][1])/2 - 16 // xpos = (plats->xmin + plats->xmax) / 2 - 16;
@@ -888,7 +913,12 @@ class MayhemEnv {
             //this.game.window_ctx.clearRect(0, 0, this.game.window.width, this.game.window.height);
 
             // draw map into its canvas buffer
-            this.game.map_buffer_ctx.drawImage(this.game.images["map" + CURRENT_LEVEL], 0, 0, MAP_WIDTH, MAP_HEIGHT, 0, 0, MAP_WIDTH, MAP_HEIGHT);
+            if(CURRENT_LEVEL==6) {
+                this.game.map_buffer_ctx.drawImage(this.game.images["map" + CURRENT_LEVEL], 0, 0, MAP_WIDTH*2, MAP_HEIGHT*2, 0, 0, MAP_WIDTH*2, MAP_HEIGHT*2);
+            }
+            else {
+                this.game.map_buffer_ctx.drawImage(this.game.images["map" + CURRENT_LEVEL], 0, 0, MAP_WIDTH, MAP_HEIGHT, 0, 0, MAP_WIDTH, MAP_HEIGHT);
+            }
 
             // collision map
             for(const ship of this.ships) {
@@ -925,17 +955,25 @@ class MayhemEnv {
                 let rx = ship.xpos - ship.view_width/2;
                 let ry = ship.ypos - ship.view_height/2;
 
+                let MAX_WIDTH  = MAP_WIDTH;
+                let MAX_HEIGHT = MAP_HEIGHT;
+
+                if(CURRENT_LEVEL==6) {
+                    MAX_WIDTH  *= 2;
+                    MAX_HEIGHT *= 2;
+                }
+
                 if(rx < 0) {
                     rx = 0;
                 }
-                else if(rx > (MAP_WIDTH - ship.view_width)) {
-                    rx = (MAP_WIDTH - ship.view_width);
+                else if(rx > (MAX_WIDTH - ship.view_width)) {
+                    rx = (MAX_WIDTH - ship.view_width);
                 }
                 if(ry < 0) {
                     ry = 0;
                 }
-                else if(ry > (MAP_HEIGHT - ship.view_height)) {
-                    ry = (MAP_HEIGHT - ship.view_height);
+                else if(ry > (MAX_HEIGHT - ship.view_height)) {
+                    ry = (MAX_HEIGHT - ship.view_height);
                 }
 
                 // blit the map area around the ship on the screen
@@ -986,7 +1024,10 @@ class MayhemEnv {
         else if (event.code == "Digit5") {
             this.set_level(5);
         }       
-
+        else if (event.code == "Digit6") {
+            this.set_level(6);
+        }       
+    
         // keyboard1 ship
         if(event.code == K1_RIGHT) {
             this.keyboard1_ship.right_pressed = true;
@@ -1210,7 +1251,7 @@ class GameWindow {
             this.window.height = this.screen_height
         }
 
-        this.window_ctx    = this.window.getContext('2d');
+        this.window_ctx    = this.window.getContext('2d', { willReadFrequently: true });
         this.window_ctx.imageSmoothingEnabled = false;
 
         this.images_assets = {
@@ -1219,6 +1260,7 @@ class GameWindow {
             map3            : "assets/level3/Mayhem_Level3_Map_256c_alpha.png",
             map4            : "assets/level4/Mayhem_Level4_Map_256c_alpha.png",
             map5            : "assets/level5/Mayhem_Level5_Map_256c_alpha.png",
+            map6            : "assets/level6/mayhem_big_holes.bmp",
             ship1           : "assets/default/ship1_256c_alpha.png",
             ship1_thrust    : "assets/default/ship1_thrust_256c_alpha.png",
             ship1_shield    : "assets/default/ship1_shield_256c_alpha.png",
@@ -1236,7 +1278,7 @@ class GameWindow {
         this.map_buffer = document.createElement('canvas');
         this.map_buffer.width  = MAP_WIDTH;
         this.map_buffer.height = MAP_HEIGHT;
-        this.map_buffer_ctx = this.map_buffer.getContext('2d');
+        this.map_buffer_ctx = this.map_buffer.getContext('2d', { willReadFrequently: true });
         this.map_buffer_ctx.imageSmoothingEnabled = false;
 
         this.images = {};
@@ -1384,7 +1426,7 @@ class GameWindow {
                 c.width = this.images[key].width;
                 c.height = this.images[key].height;
 
-                let c_ctx = c.getContext('2d');
+                let c_ctx = c.getContext('2d', { willReadFrequently: true });
                 //c_ctx.drawImage(this.images[key], 0, 0, this.images[key].width, this.images[key].height);
                 this.ships_ctx[key] = c;
             }
