@@ -30,7 +30,7 @@ var LANDED_SLOW_DOWN_COEF = 4.0;
 
 //var SHIP_MASS = 0.9;
 
-var SHIP_THRUST_MAX = 0.035;
+var SHIP_THRUST_MAX = 0.03;
 var iG       = 0.01 ;
 var iXfrott  = 0.994;
 var iYfrott  = 0.994;
@@ -106,6 +106,20 @@ var PLATFORMS_6 = [
     [806, 857, 1311], [830, 885, 2321], [1505, 1552, 1431], [1265, 1332, 1817], [1357, 1408, 1659], [1135, 1190, 1407], [1108, 1177, 2005], [1284, 1340, 2187], [858, 937, 2380],
     [19, 69, 1311], [32, 84, 2321], [705, 755, 1431], [487, 547, 1817], [556, 607, 1659], [344, 393, 1407], [326, 377, 2005], [502, 554, 2187], [66, 145, 2380]
 ];
+
+var PLATFORMS_7 = [ 
+    [464, 513, 333],  [60, 127, 1045], [428, 497, 531], [504, 568, 985],
+    [178, 241, 875],  [8, 37, 187],    [302, 351, 271], [434, 521, 835],
+    [499, 586, 1165], [68, 145, 1181],
+
+    [993, 1051, 175], [813, 884, 1087], [1344, 1407, 513], [1260, 1317, 915], [1338, 1391, 327], [1452, 1489, 447], [1142, 1227, 621], [1388, 1489, 1141],
+    [806, 857, 1311], [830, 885, 2321], [1505, 1552, 1431], [1265, 1332, 1817], [1357, 1408, 1659], [1135, 1190, 1407], [1108, 1177, 2005], [1284, 1340, 2187], [858, 937, 2380],
+    [19, 69, 1311], [32, 84, 2321], [705, 755, 1431], [487, 547, 1817], [556, 607, 1659], [344, 393, 1407], [326, 377, 2005], [502, 554, 2187], [66, 145, 2380],
+
+    [504, 568, 3385], [464, 513, 2733], [428, 497, 2931], [178, 241, 3275], [8, 37, 2587], [302, 351, 2671], [434, 521, 3235], [434, 521, 3235], [60, 127, 3445], [348, 377, 3489], [499, 586, 3565], [68, 145, 3581],
+    [1296, 1360, 3385], [1256, 1305, 2733], [1220, 1289, 2931], [970, 1033, 3275], [800, 829, 2587], [1094, 1143, 2671], [1226, 1313, 3235], [1226, 1313, 3235], [852, 919, 3445], [1140, 1169, 3489], [1291, 1378, 3565], [860, 937, 3581]
+];
+
 
 // TODO made that editable dynamically
 // Keyboard / Gamepad controls (https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API)
@@ -525,7 +539,7 @@ class Ship {
             //this.ypos = Math.floor(this.yposprecise);
 
             if(CURRENT_LEVEL==1) {
-                if (this.ypos <= 160 && this.xpos >= 174 & this.xpos <= 184) {
+                if (this.ypos <= 160 && this.xpos >= 174 && this.xpos <= 184) {
                     this.xpos = 344;
                     this.ypos = 1052;
                     this.xposprecise = this.xpos;
@@ -538,8 +552,42 @@ class Ship {
                     this.yposprecise = this.ypos;
                   }
             }
-            else if (CURRENT_LEVEL==5) {
-                // wrap horizontally
+
+            // wrap horizontally // vertically
+            if (CURRENT_LEVEL==6 || CURRENT_LEVEL==7) {
+                // W
+                if (this.xpos > MAP_WIDTH*2) {
+                    this.xpos = 0;
+                    this.xposprecise = this.xpos;
+                }
+                else if (this.xpos < 0) {
+                    this.xpos = MAP_WIDTH*2;
+                    this.xposprecise = this.xpos;
+                }
+                // H
+                if (CURRENT_LEVEL==6) {
+                    if (this.ypos > MAP_HEIGHT*2) {
+                        this.ypos = 0;
+                        this.yposprecise = this.ypos;
+                    }
+                    else if (this.ypos < 0) {
+                        this.ypos = MAP_HEIGHT*2;
+                        this.yposprecise = this.ypos;
+                    }
+                }
+                else if (CURRENT_LEVEL==7) {
+                    if (this.ypos > MAP_HEIGHT*3) {
+                        this.ypos = 0;
+                        this.yposprecise = this.ypos;
+                    }
+                    else if (this.ypos < 0) {
+                        this.ypos = MAP_HEIGHT*3;
+                        this.yposprecise = this.ypos;
+                    }
+                }
+            }
+            else {
+                // W
                 if (this.xpos > MAP_WIDTH) {
                     this.xpos = 0;
                     this.xposprecise = this.xpos;
@@ -547,6 +595,15 @@ class Ship {
                 else if (this.xpos < 0) {
                     this.xpos = MAP_WIDTH;
                     this.xposprecise = this.xpos;
+                }
+                // H
+                if (this.ypos > MAP_HEIGHT) {
+                    this.ypos = 0;
+                    this.yposprecise = this.ypos;
+                }
+                else if (this.ypos < 0) {
+                    this.ypos = MAP_HEIGHT;
+                    this.yposprecise = this.ypos;
                 }
             }
 
@@ -639,6 +696,10 @@ class Ship {
 
                     if( ship_pixels[i+3]==255 && !map_pix_is_black ) {
                         this.explod = true;
+                        //this.ax = 0;
+                        //this.ay = 0;
+                        //this.vx = 0;
+                        //this.vy = 0;
                         break;
                     }
                 }
@@ -799,12 +860,16 @@ class MayhemEnv {
     set_level(level) {
         CURRENT_LEVEL = level;
 
-        if(CURRENT_LEVEL==6) {
+        if(CURRENT_LEVEL==7) {
             //this.game.map_buffer = document.createElement('canvas');
             this.game.map_buffer.width  = MAP_WIDTH*2;
-            this.game.map_buffer.height = MAP_HEIGHT*2;
+            this.game.map_buffer.height = MAP_HEIGHT*3;
             //this.game.map_buffer_ctx = this.game.map_buffer.getContext('2d', { willReadFrequently: true });
             //this.game.map_buffer_ctx.imageSmoothingEnabled = false;
+        }
+        else if(CURRENT_LEVEL==6) {
+            this.game.map_buffer.width  = MAP_WIDTH*2;
+            this.game.map_buffer.height = MAP_HEIGHT*2;
         }
         else {
             this.game.map_buffer.width  = MAP_WIDTH;
@@ -828,6 +893,9 @@ class MayhemEnv {
         }
         else if(level==6) {
             var platforms = PLATFORMS_6;            
+        }
+        else if(level==7) {
+            var platforms = PLATFORMS_7;            
         }
 
         var SHIP1_X = (platforms[0][0] + platforms[0][1])/2 - 16 // xpos = (plats->xmin + plats->xmax) / 2 - 16;
@@ -913,7 +981,10 @@ class MayhemEnv {
             //this.game.window_ctx.clearRect(0, 0, this.game.window.width, this.game.window.height);
 
             // draw map into its canvas buffer
-            if(CURRENT_LEVEL==6) {
+            if(CURRENT_LEVEL==7) {
+                this.game.map_buffer_ctx.drawImage(this.game.images["map" + CURRENT_LEVEL], 0, 0, MAP_WIDTH*2, MAP_HEIGHT*3, 0, 0, MAP_WIDTH*2, MAP_HEIGHT*3);
+            }
+            else if(CURRENT_LEVEL==6) {
                 this.game.map_buffer_ctx.drawImage(this.game.images["map" + CURRENT_LEVEL], 0, 0, MAP_WIDTH*2, MAP_HEIGHT*2, 0, 0, MAP_WIDTH*2, MAP_HEIGHT*2);
             }
             else {
@@ -958,7 +1029,11 @@ class MayhemEnv {
                 let MAX_WIDTH  = MAP_WIDTH;
                 let MAX_HEIGHT = MAP_HEIGHT;
 
-                if(CURRENT_LEVEL==6) {
+                if(CURRENT_LEVEL==7) {
+                    MAX_WIDTH  *= 2;
+                    MAX_HEIGHT *= 3;
+                }
+                else if (CURRENT_LEVEL==6) {
                     MAX_WIDTH  *= 2;
                     MAX_HEIGHT *= 2;
                 }
@@ -1027,7 +1102,10 @@ class MayhemEnv {
         else if (event.code == "Digit6") {
             this.set_level(6);
         }       
-    
+        else if (event.code == "Digit7") {
+            this.set_level(7);
+        }  
+
         // keyboard1 ship
         if(event.code == K1_RIGHT) {
             this.keyboard1_ship.right_pressed = true;
@@ -1261,6 +1339,7 @@ class GameWindow {
             map4            : "assets/level4/Mayhem_Level4_Map_256c_alpha.png",
             map5            : "assets/level5/Mayhem_Level5_Map_256c_alpha.png",
             map6            : "assets/level6/mayhem_big_holes.bmp",
+            map7            : "assets/level7/mayhem_big2_holes1.bmp",
             ship1           : "assets/default/ship1_256c_alpha.png",
             ship1_thrust    : "assets/default/ship1_thrust_256c_alpha.png",
             ship1_shield    : "assets/default/ship1_shield_256c_alpha.png",
